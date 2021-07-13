@@ -76,7 +76,7 @@ public class FirstApplication {
                 .messageHandler((context, message) -> messageConsumed.incrementAndGet())
                 .build();
 
-        Utils.waitAtMost(60, () -> messageConsumed.get() == 1_000_000);
+        Utils.waitAtMost(60, () -> messageConsumed.get() >= 1_000_000);
         log(
             "Consumed %,d messages in %s ms",
             messageConsumed.get(), (System.currentTimeMillis() - start));

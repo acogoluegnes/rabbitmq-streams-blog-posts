@@ -11,8 +11,8 @@ To start RabbitMQ:
 
 ```shell
 docker run -it --rm --name rabbitmq -p 5552:5552 \
-    -e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-rabbitmq_stream advertised_host localhost" \
-    pivotalrabbitmq/rabbitmq-stream
+    -e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS='-rabbitmq_stream advertised_host localhost -rabbit loopback_users "none"' \
+    rabbitmq:3.9-rc
 ```
 
 In another terminal tab, enable the stream plugin:
