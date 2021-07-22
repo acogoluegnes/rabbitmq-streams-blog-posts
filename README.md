@@ -23,6 +23,8 @@ docker exec rabbitmq rabbitmq-plugins enable rabbitmq_stream
 
 ## First Application
 
+[Blog Post](https://blog.rabbitmq.com/posts/2021/07/rabbitmq-streams-first-application/)
+
 Publishing:
 
 ```

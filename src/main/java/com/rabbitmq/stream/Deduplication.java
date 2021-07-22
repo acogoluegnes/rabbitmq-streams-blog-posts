@@ -1,11 +1,10 @@
 package com.rabbitmq.stream;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Deduplication {
 
@@ -13,8 +12,8 @@ public class Deduplication {
     System.out.println(String.format(format, arguments));
   }
 
-  static List<String> messages(int count) {
-    return IntStream.range(0, count).mapToObj(i -> "message " + i).collect(Collectors.toList());
+  static Stream<Record> records(long start, long end) {
+    return IntStream.range((int) start, (int) end).mapToObj(i -> new Record(i, "message " + i));
   }
 
   public static class CreateEmptyStream {
@@ -48,13 +47,13 @@ public class Deduplication {
         int messageCount = 10;
         CountDownLatch latch = new CountDownLatch(messageCount);
         log("Publishing %d messages.", messageCount);
-        messages(messageCount)
+        records(0, messageCount)
             .forEach(
-                payload -> {
+                record -> {
                   Message message =
                       producer
                           .messageBuilder()
-                          .addData(payload.getBytes(StandardCharsets.UTF_8))
+                          .addData(record.content().getBytes(StandardCharsets.UTF_8))
                           .build();
                   producer.send(message, confirmationStatus -> latch.countDown());
                 });
@@ -74,13 +73,13 @@ public class Deduplication {
         int messageCount = 20;
         CountDownLatch latch = new CountDownLatch(messageCount);
         log("Publishing %d messages.", messageCount);
-        messages(messageCount)
+        records(0, messageCount)
             .forEach(
-                payload -> {
+                record -> {
                   Message message =
                       producer
                           .messageBuilder()
-                          .addData(payload.getBytes(StandardCharsets.UTF_8))
+                          .addData(record.content().getBytes(StandardCharsets.UTF_8))
                           .build();
                   producer.send(message, confirmationStatus -> latch.countDown());
                 });
@@ -100,18 +99,18 @@ public class Deduplication {
             environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
         int messageCount = 10;
         CountDownLatch latch = new CountDownLatch(messageCount);
-        List<String> messages = messages(messageCount);
-        log("Publishing %d message with deduplication enabled.");
-        for (int i = 0; i < messageCount; i++) {
-          String payload = messages.get(i);
-          Message message =
-              producer
-                  .messageBuilder()
-                  .publishingId(i)
-                  .addData(payload.getBytes(StandardCharsets.UTF_8))
-                  .build();
-          producer.send(message, confirmationStatus -> latch.countDown());
-        }
+        log("Publishing %d messages with deduplication enabled.", messageCount);
+        records(0, messageCount)
+            .forEach(
+                record -> {
+                  Message message =
+                      producer
+                          .messageBuilder()
+                          .publishingId(record.id())
+                          .addData(record.content().getBytes(StandardCharsets.UTF_8))
+                          .build();
+                  producer.send(message, confirmationStatus -> latch.countDown());
+                });
         boolean done = latch.await(10, TimeUnit.SECONDS);
         log("Messages confirmed? %s", done ? "yes" : "no");
       }
@@ -128,18 +127,18 @@ public class Deduplication {
             environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
         int messageCount = 20;
         CountDownLatch latch = new CountDownLatch(messageCount);
-        List<String> messages = messages(messageCount);
-        log("Publishing %d message with deduplication enabled.");
-        for (int i = 0; i < messageCount; i++) {
-          String payload = messages.get(i);
-          Message message =
-              producer
-                  .messageBuilder()
-                  .publishingId(i)
-                  .addData(payload.getBytes(StandardCharsets.UTF_8))
-                  .build();
-          producer.send(message, confirmationStatus -> latch.countDown());
-        }
+        log("Publishing %d messages with deduplication enabled.", messageCount);
+        records(0, messageCount)
+            .forEach(
+                record -> {
+                  Message message =
+                      producer
+                          .messageBuilder()
+                          .publishingId(record.id())
+                          .addData(record.content().getBytes(StandardCharsets.UTF_8))
+                          .build();
+                  producer.send(message, confirmationStatus -> latch.countDown());
+                });
         boolean done = latch.await(10, TimeUnit.SECONDS);
         log("Messages confirmed? %s", done ? "yes" : "no");
       }
@@ -155,21 +154,21 @@ public class Deduplication {
         Producer producer =
             environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
         int messageCount = 20;
-        List<String> messages = messages(messageCount);
-        int start = (int) producer.getLastPublishingId() + 1;
+        long start = producer.getLastPublishingId() + 1;
         log("Starting publishing at %s", start);
         log("Publishing %d message with deduplication enabled.", messageCount - start);
-        CountDownLatch latch = new CountDownLatch(messageCount - start);
-        for (int i = start; i < messageCount; i++) {
-          String payload = messages.get(i);
-          Message message =
-              producer
-                  .messageBuilder()
-                  .publishingId(i)
-                  .addData(payload.getBytes(StandardCharsets.UTF_8))
-                  .build();
-          producer.send(message, confirmationStatus -> latch.countDown());
-        }
+        CountDownLatch latch = new CountDownLatch(messageCount - (int) start);
+        records(start, messageCount)
+            .forEach(
+                record -> {
+                  Message message =
+                      producer
+                          .messageBuilder()
+                          .publishingId(record.id())
+                          .addData(record.content().getBytes(StandardCharsets.UTF_8))
+                          .build();
+                  producer.send(message, confirmationStatus -> latch.countDown());
+                });
         boolean done = latch.await(10, TimeUnit.SECONDS);
         log("Messages confirmed? %s", done ? "yes" : "no");
       }
@@ -192,6 +191,25 @@ public class Deduplication {
             .build();
         System.in.read();
       }
+    }
+  }
+
+  static class Record {
+
+    private final long id;
+    private final String content;
+
+    Record(long id, String content) {
+      this.id = id;
+      this.content = content;
+    }
+
+    public long id() {
+      return id;
+    }
+
+    public String content() {
+      return content;
     }
   }
 }
