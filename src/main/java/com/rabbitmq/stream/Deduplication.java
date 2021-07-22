@@ -1,6 +1,7 @@
 package com.rabbitmq.stream;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -96,7 +97,10 @@ public class Deduplication {
       try (Environment environment = Environment.builder().build()) {
         log("Connected.");
         Producer producer =
-            environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
+            environment.producerBuilder().stream("deduplication-stream")
+                .name("app-1")
+                .confirmTimeout(Duration.ZERO)
+                .build();
         int messageCount = 10;
         CountDownLatch latch = new CountDownLatch(messageCount);
         log("Publishing %d messages with deduplication enabled.", messageCount);
@@ -124,7 +128,10 @@ public class Deduplication {
       try (Environment environment = Environment.builder().build()) {
         log("Connected.");
         Producer producer =
-            environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
+            environment.producerBuilder().stream("deduplication-stream")
+                .name("app-1")
+                .confirmTimeout(Duration.ZERO)
+                .build();
         int messageCount = 20;
         CountDownLatch latch = new CountDownLatch(messageCount);
         log("Publishing %d messages with deduplication enabled.", messageCount);
@@ -152,7 +159,10 @@ public class Deduplication {
       try (Environment environment = Environment.builder().build()) {
         log("Connected.");
         Producer producer =
-            environment.producerBuilder().stream("deduplication-stream").name("app-1").build();
+            environment.producerBuilder().stream("deduplication-stream")
+                .name("app-1")
+                .confirmTimeout(Duration.ZERO)
+                .build();
         int messageCount = 20;
         long start = producer.getLastPublishingId() + 1;
         log("Starting publishing at %s", start);
