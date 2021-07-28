@@ -38,3 +38,9 @@ Consuming:
 ```
 
 NB: remove the `-q` option if nothing is output on the console, this will help to diagnose problems.
+
+## Message Deduplication
+
+[Blog Post](https://blog.rabbitmq.com/posts/2021/07/streams-deduplication/)
+
+NB: remove the `-q` option if nothing is output on the console, this will help to diagnose problems.
