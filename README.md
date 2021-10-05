@@ -44,3 +44,9 @@ NB: remove the `-q` option if nothing is output on the console, this will help t
 [Blog Post](https://blog.rabbitmq.com/posts/2021/07/rabbitmq-streams-message-deduplication)
 
 NB: remove the `-q` option if nothing is output on the console, this will help to diagnose problems.
+
+## Offset Tracking
+
+[Blog Post](https://blog.rabbitmq.com/posts/2021/09/rabbitmq-streams-offset-tracking)
+
+NB: remove the `-q` option if nothing is output on the console, this will help to diagnose problems.
