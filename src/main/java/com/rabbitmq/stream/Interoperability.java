@@ -7,6 +7,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +25,6 @@ public class Interoperability {
       ConnectionFactory connectionFactory = new ConnectionFactory();
       log("Connecting...");
       try (Connection connection = connectionFactory.newConnection()) {
-        log("Connecting...");
         log("Connected");
         Channel channel = connection.createChannel();
         log("Creating 'events' topic exchange...");
@@ -60,6 +60,7 @@ public class Interoperability {
               REGIONS[i % REGIONS.length],
               new AMQP.BasicProperties.Builder()
                   .messageId(String.valueOf(i))
+                  .timestamp(new Date())
                   .contentType("text/plain")
                   .build(),
               ("message " + i).getBytes(StandardCharsets.UTF_8));
@@ -94,8 +95,10 @@ public class Interoperability {
                         latch.countDown();
                       } else {
                         log(
-                            "Message #%s, content type '%s', from exchange %s with routing key %s",
+                            "Message #%s, creation time %tF %tT, content type '%s', from exchange %s with routing key %s",
                             message.getProperties().getMessageId(),
+                            message.getProperties().getCreationTime(),
+                            message.getProperties().getCreationTime(),
                             message.getProperties().getContentType(),
                             message.getMessageAnnotations().get("x-exchange"),
                             message.getMessageAnnotations().get("x-routing-key"));
